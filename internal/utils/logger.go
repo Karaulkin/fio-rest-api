@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/Karaulkin/fio-rest-api/internal/config"
 	"log/slog"
 	"os"
 )
@@ -11,10 +12,10 @@ var (
 	envProd  = "prod"
 )
 
-func SetupLogger(env string) *slog.Logger {
+func SetupLogger(cfg *config.Config) *slog.Logger {
 	var log *slog.Logger
 
-	switch env {
+	switch cfg.Log.Level {
 	case envLocal:
 		log = slog.New(
 			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
