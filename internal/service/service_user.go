@@ -8,28 +8,29 @@ import (
 type User interface {
 	// TODO: Для получения данных с различными фильтрами и пагинацией
 	CreateUser(user *models.User) (*models.User, error)
-	FindByUserId(id int64) (models.User, error)
-	EditeByUser(response models.UserResponse) (models.User, error)
+	DeleteUserById(id int64) (models.User, error)
+	UpdateUser(response models.UserResponse) (models.User, error)
 }
 
-type ServiceUser struct {
+type UserService struct {
 	userRepo *repository.UserRepository
 }
 
-func NewServiceUser(userRepo *repository.UserRepository) *ServiceUser {
-	return &ServiceUser{userRepo: userRepo}
+func NewServiceUser(userRepo *repository.UserRepository) *UserService {
+	return &UserService{userRepo: userRepo}
 }
 
-// TODO:сделать сервис
+// TODO:сделать сервисы
+// TODO:сделать с паганациями и фильтрами
 
-func (s *ServiceUser) CreateUser(user *models.User) (*models.User, error) {
+func (s *UserService) CreateUser(user *models.User) (*models.User, error) {
 	panic("implement me")
 }
 
-func (s *ServiceUser) FindByUserId(userId int64) (models.User, error) {
+func (s *UserService) DeleteUserById(userId int64) (models.User, error) {
 	panic("implement me")
 }
 
-func (s *ServiceUser) EditeByUser(response models.UserResponse) (models.User, error) {
+func (s *UserService) UpdateProfileUser(response models.UserResponse) (models.User, error) {
 	panic("implement me")
 }

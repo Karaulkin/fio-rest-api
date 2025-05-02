@@ -18,11 +18,11 @@ func (u *UserRepository) CreateUser(user *models.User) (*models.User, error) {
 }
 
 // FindByUserId для удаления по индификатору
-func (u *UserRepository) FindByUserId(id int64) (models.User, error) {
+func (u *UserRepository) DeleteUserById(id int64) (models.User, error) {
 	panic("implement me")
 }
 
 // EditeByUser для изменения сущности
-func (u *UserRepository) EditeByUser(response models.UserResponse) (models.User, error) {
+func (u *UserRepository) UpdateUser(response models.UserResponse) (models.User, error) {
 	panic("implement me")
 }
