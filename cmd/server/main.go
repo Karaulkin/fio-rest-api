@@ -1,66 +1,85 @@
+// @title FIO REST API
+// @version 1.0
+// @description API для обработки ФИО и обогащения данными
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @schemes http
 package main
 
 import (
 	"context"
+	"github.com/Karaulkin/fio-rest-api/internal/api"
 	"github.com/Karaulkin/fio-rest-api/internal/api/handlers"
 	"github.com/Karaulkin/fio-rest-api/internal/config"
+	customMiddleware "github.com/Karaulkin/fio-rest-api/internal/midleware"
 	"github.com/Karaulkin/fio-rest-api/internal/repository"
 	"github.com/Karaulkin/fio-rest-api/internal/repository/postgres"
-	"github.com/Karaulkin/fio-rest-api/internal/service/service"
+	"github.com/Karaulkin/fio-rest-api/internal/service"
 	"github.com/Karaulkin/fio-rest-api/internal/utils"
 	"github.com/labstack/echo/v4"
-	"log"
+	"github.com/labstack/echo/v4/middleware"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+	//_ "github.com/Karaulkin/fio-rest-api/docs"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
-	logger := utils.SetupLogger(cfg)
-	logger.Info("Starting server", slog.String("log", cfg.Log.Level))
+	log := utils.SetupLogger(cfg)
+	log.Info("Starting server", slog.String("log", cfg.Log.Level))
 
 	// Инициализация базы данных
+	log.Debug("Init database")
 	db, err := postgres.NewDB(cfg)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Error("Failed to connect to database: %v", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	// Запуск миграций
-	if err := postgres.RunMigrations(db.DB, "./migrations", logger); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+	if err := postgres.RunMigrations(db.DB, "./migrations", log); err != nil {
+		log.Error("Failed to run migrations: %v", err)
+		os.Exit(1)
 	}
 
 	// Инициализация репозиториев
+	log.Debug("Up user repo service")
 	userRepo := repository.NewUsersRepository(db)
 
 	// Инициализация сервисов
-	userService := service.NewServiceUser(userRepo)
+	log.Debug("Up user service")
+	userService := service.NewServiceUser(userRepo, log)
 
 	// Инициализация обработчиков
-	userHandler := handlers.NewUserHandler(userService)
+	log.Debug("Up user handler")
+	userHandler := handlers.NewUserHandler(userService, log)
 
 	// Инициализация Echo
 	e := echo.New()
-	// e.Use(middleware.Logger())
+	e.Use(middleware.Logger())
 	//e.Use(middleware.Recover())
 	//e.Use(middleware.CORS())
 
 	// Инициализация валидатора
-	//e.Validator = customMiddleware.NewValidator()
+	e.Validator = customMiddleware.NewValidator()
 
 	// Настройка маршрутов
-	//api.SetupRoutes(e, cfg, userHandler, accountHandler, txHandler, otpHandler)
+	log.Debug("Init routes")
+	api.SetupRoutes(e, userHandler)
 
 	// Запуск сервера
 	go func() {
 		if err := e.Start(":" + cfg.Server.Port); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+			log.Error("Failed to start server: %v", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -74,7 +93,8 @@ func main() {
 	defer cancel()
 
 	if err := e.Shutdown(ctx); err != nil {
-		logger.Error("Failed to shutdown server: %v", err)
+		log.Error("Failed to shutdown server: %v", err)
+		os.Exit(1)
 	}
 
 }

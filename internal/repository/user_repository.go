@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"github.com/Karaulkin/fio-rest-api/internal/client"
 	"github.com/Karaulkin/fio-rest-api/internal/models"
 	pg "github.com/Karaulkin/fio-rest-api/internal/repository/postgres"
 )
@@ -15,9 +14,9 @@ func NewUsersRepository(db *pg.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
-func (u *UserRepository) GetUsers(name string, page, pageSize int) ([]*models.User, error) {
+func (u *UserRepository) GetUsers(name string, page, pageSize int) ([]models.User, error) {
 	offset := (page - 1) * pageSize
-	var users []*models.User
+	var users []models.User
 
 	query := `
         SELECT id, name, surname, patronymic, age, gender, nationality
@@ -41,31 +40,32 @@ func (u *UserRepository) GetUsers(name string, page, pageSize int) ([]*models.Us
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-		users = append(users, &user)
+		users = append(users, user)
 	}
 
 	return users, nil
 }
 
-// CreateUser для добавления новых людей в формате (Корректное сообщение обогатить)
-func (u *UserRepository) CreateUser(name, surname, patronymic string) error {
-	if name == "" || surname == "" {
-		return fmt.Errorf("name and surname are required")
-	}
+func (u *UserRepository) GetUser(id int64) (models.User, error) {
+	var user models.User
 
-	enriched, err := client.Enrich(name)
+	query := `
+		SELECT * FROM users WHERE id = $1;
+	`
+
+	err := u.db.QueryRow(query, id).Scan(&user.ID, &user.Name, &user.Surname, &user.Patronymic, &user.Age, &user.Gender, &user.Nationality)
 
 	if err != nil {
-		return err
+		return models.User{}, fmt.Errorf("failed to query user: %w", err)
 	}
 
-	var user = models.User{
-		Name:        name,
-		Surname:     surname,
-		Patronymic:  patronymic,
-		Age:         enriched.Age,
-		Gender:      enriched.Gender,
-		Nationality: enriched.Nationality,
+	return user, nil
+}
+
+// CreateUser для добавления новых людей в формате (Корректное сообщение обогатить)
+func (u *UserRepository) CreateUser(user *models.User) error {
+	if user.Name == "" || user.Surname == "" {
+		return fmt.Errorf("name and surname are required")
 	}
 
 	query := `
@@ -74,7 +74,7 @@ func (u *UserRepository) CreateUser(name, surname, patronymic string) error {
         RETURNING id;
     `
 
-	err = u.db.QueryRow(query, user.Name, user.Surname, user.Patronymic, user.Age, user.Gender, user.Nationality).
+	err := u.db.QueryRow(query, user.Name, user.Surname, user.Patronymic, user.Age, user.Gender, user.Nationality).
 		Scan(&user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)
@@ -106,7 +106,7 @@ func (u *UserRepository) DeleteUserById(id int64) error {
 }
 
 // UpdateUserобновляет пользоваткля
-func (u *UserRepository) UpdateUser(user models.User) error {
+func (u *UserRepository) UpdateUser(user *models.User) error {
 	query := `
         UPDATE users
         SET name = $1, surname = $2, patronymic = $3, age = $4, gender = $5, nationality = $6

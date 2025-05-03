@@ -36,7 +36,9 @@ func RunMigrations(db *sql.DB, migrationsDir string, log *slog.Logger) error {
 		return fmt.Errorf("failed to get absolute path for migrations: %w", err)
 	}
 
-	log.Info("Running migrations from %s", absPath)
+	log.Info("running migrations")
+	log.Debug("running migrations from %s", absPath)
+
 	if err := goose.SetDialect("postgres"); err != nil {
 		return err
 	}
