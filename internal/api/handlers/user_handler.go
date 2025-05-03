@@ -10,10 +10,17 @@ import (
 	"strconv"
 )
 
+const (
+	minPage  = 1
+	sizePage = 10
+)
+
 type UserHandler struct {
 	userService *service.UserService
 	log         *slog.Logger
 }
+
+// TODO: debug slice
 
 // NewUserHandler создает новый обработчик для работы с пользователями
 func NewUserHandler(userService *service.UserService, log *slog.Logger) *UserHandler {
@@ -38,10 +45,10 @@ func (uh *UserHandler) GetUsers(c echo.Context) error {
 	pageSize, _ := strconv.Atoi(c.QueryParam("page_size"))
 
 	if page <= 0 {
-		page = 1
+		page = minPage
 	}
 	if pageSize <= 0 {
-		pageSize = 10
+		pageSize = sizePage
 	}
 
 	users, err := uh.userService.GetUsers(name, page, pageSize)
@@ -72,7 +79,7 @@ func (uh *UserHandler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid input"})
 	}
 
-	user := &models.User{
+	user := models.User{
 		Name:       req.Name,
 		Surname:    req.Surname,
 		Patronymic: req.Patronymic,
@@ -83,7 +90,14 @@ func (uh *UserHandler) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, created)
+	return c.JSON(http.StatusCreated, models.UserResponse{
+		Name:        created.Name,
+		Surname:     created.Surname,
+		Patronymic:  created.Patronymic,
+		Age:         created.Age,
+		Gender:      created.Gender,
+		Nationality: created.Nationality,
+	})
 }
 
 // DeleteUser Удалить пользователя по ID
@@ -101,7 +115,7 @@ func (uh *UserHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid id"})
 	}
 
-	deletedUser, err := uh.userService.DeleteById(id)
+	deleted, err := uh.userService.DeleteById(id)
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {
 			return c.JSON(http.StatusNotFound, echo.Map{"error": "user not found"})
@@ -109,7 +123,14 @@ func (uh *UserHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, deletedUser)
+	return c.JSON(http.StatusOK, models.UserResponse{
+		Name:        deleted.Name,
+		Surname:     deleted.Surname,
+		Patronymic:  deleted.Patronymic,
+		Age:         deleted.Age,
+		Gender:      deleted.Gender,
+		Nationality: deleted.Nationality,
+	})
 }
 
 // UpdateUser Обновить данные пользователя
@@ -141,5 +162,12 @@ func (uh *UserHandler) UpdateUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, updated)
+	return c.JSON(http.StatusOK, models.UserResponse{
+		Name:        updated.Name,
+		Surname:     updated.Surname,
+		Patronymic:  updated.Patronymic,
+		Age:         updated.Age,
+		Gender:      updated.Gender,
+		Nationality: updated.Nationality,
+	})
 }
