@@ -6,10 +6,10 @@ import (
 )
 
 type User interface {
-	// TODO: Для получения данных с различными фильтрами и пагинацией
-	CreateUser(user *models.User) (*models.User, error)
-	DeleteUserById(id int64) (models.User, error)
-	UpdateUser(response models.UserResponse) (models.User, error)
+	GetUsers(name string, page, pageSize int) ([]*models.User, error)
+	CreateUser(name, surname, patronymic string) error
+	DeleteUserById(id int64) error
+	UpdateUser(user models.User) error
 }
 
 type UserService struct {
@@ -19,9 +19,6 @@ type UserService struct {
 func NewServiceUser(userRepo *repository.UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
-
-// TODO:сделать сервисы
-// TODO:сделать с паганациями и фильтрами
 
 func (s *UserService) CreateUser(user *models.User) (*models.User, error) {
 	panic("implement me")

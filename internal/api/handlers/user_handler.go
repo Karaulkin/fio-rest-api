@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/Karaulkin/fio-rest-api/internal/service"
+	"github.com/Karaulkin/fio-rest-api/internal/service/service"
 	"github.com/labstack/echo/v4"
 )
 

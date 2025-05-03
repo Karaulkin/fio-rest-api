@@ -6,7 +6,7 @@ import (
 	"github.com/Karaulkin/fio-rest-api/internal/config"
 	"github.com/Karaulkin/fio-rest-api/internal/repository"
 	"github.com/Karaulkin/fio-rest-api/internal/repository/postgres"
-	"github.com/Karaulkin/fio-rest-api/internal/service"
+	"github.com/Karaulkin/fio-rest-api/internal/service/service"
 	"github.com/Karaulkin/fio-rest-api/internal/utils"
 	"github.com/labstack/echo/v4"
 	"log"
