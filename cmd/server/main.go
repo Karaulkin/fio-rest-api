@@ -5,6 +5,7 @@ import (
 	"github.com/Karaulkin/fio-rest-api/internal/api/handlers"
 	"github.com/Karaulkin/fio-rest-api/internal/config"
 	"github.com/Karaulkin/fio-rest-api/internal/repository"
+	"github.com/Karaulkin/fio-rest-api/internal/repository/postgres"
 	"github.com/Karaulkin/fio-rest-api/internal/service"
 	"github.com/Karaulkin/fio-rest-api/internal/utils"
 	"github.com/labstack/echo/v4"
@@ -24,14 +25,14 @@ func main() {
 	logger.Info("Starting server", slog.String("log", cfg.Log.Level))
 
 	// Инициализация базы данных
-	db, err := repository.NewDB(cfg)
+	db, err := postgres.NewDB(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	// Запуск миграций
-	if err := repository.RunMigrations(db.DB, "./migrations", logger); err != nil {
+	if err := postgres.RunMigrations(db.DB, "./migrations", logger); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 

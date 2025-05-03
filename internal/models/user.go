@@ -28,7 +28,10 @@ type UserResponse struct {
 	Nationality string `json:"nationality"`
 }
 
-// UsersResponse для получения пользователей
+// UsersResponse для получения пользователей пагинацией и фильтрами
 type UsersResponse struct {
-	Users []UserResponse `json:"users"`
+	Users    []User `json:"users"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"page_size"`
+	Total    int    `json:"total"`
 }
