@@ -35,73 +35,52 @@ func NewServiceUser(userRepo *repository.UserRepository, log *slog.Logger) *User
 	}
 }
 
-func (s *UserService) Create(user *models.User) (models.UserResponse, error) {
+func (s *UserService) Create(user models.User) (models.User, error) {
 	if user.Name == "" || user.Surname == "" {
-		return models.UserResponse{}, ErrInvalidInput
+		return models.User{}, ErrInvalidInput
 	}
 
 	enrichment, err := client.Enrich(user.Name)
 	if err != nil {
-		return models.UserResponse{}, fmt.Errorf("failed to enrich data: %w", err)
+		return models.User{}, fmt.Errorf("failed to enrich data: %w", err)
 	}
 
 	user.Age = enrichment.Age
 	user.Gender = enrichment.Gender
 	user.Nationality = enrichment.Nationality
 
-	err = s.userRepo.CreateUser(user)
+	err = s.userRepo.CreateUser(&user)
 	if err != nil {
-		return models.UserResponse{}, fmt.Errorf("failed to create user: %w", err)
+		return models.User{}, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	return models.UserResponse{
-		Name:        user.Name,
-		Surname:     user.Surname,
-		Patronymic:  user.Patronymic,
-		Age:         user.Age,
-		Gender:      user.Gender,
-		Nationality: user.Nationality,
-	}, nil
+	return user, nil
 }
 
-func (s *UserService) DeleteById(userId int64) (models.UserResponse, error) {
+func (s *UserService) DeleteById(userId int64) (models.User, error) {
 	user, err := s.userRepo.GetUser(userId)
 
 	err = s.userRepo.DeleteUserById(userId)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			return models.UserResponse{}, ErrNotFound
+			return models.User{}, ErrNotFound
 		}
-		return models.UserResponse{}, fmt.Errorf("failed to delete user: %w", err)
+		return models.User{}, fmt.Errorf("failed to delete user: %w", err)
 	}
 
-	return models.UserResponse{
-		Name:        user.Name,
-		Surname:     user.Surname,
-		Patronymic:  user.Patronymic,
-		Age:         user.Age,
-		Gender:      user.Gender,
-		Nationality: user.Nationality,
-	}, nil
+	return user, nil
 }
 
-func (s *UserService) UpdateProfile(u models.User) (models.UserResponse, error) {
-	err := s.userRepo.UpdateUser(&u)
+func (s *UserService) UpdateProfile(user models.User) (models.User, error) {
+	err := s.userRepo.UpdateUser(&user)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			return models.UserResponse{}, ErrNotFound
+			return models.User{}, ErrNotFound
 		}
-		return models.UserResponse{}, fmt.Errorf("failed to update user: %w", err)
+		return models.User{}, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return models.UserResponse{
-		Name:        u.Name,
-		Surname:     u.Surname,
-		Patronymic:  u.Patronymic,
-		Age:         u.Age,
-		Gender:      u.Gender,
-		Nationality: u.Nationality,
-	}, nil
+	return user, nil
 }
 
 func (s *UserService) GetUsers(name string, page, pageSize int) ([]models.User, error) {
