@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/Karaulkin/fio-rest-api/internal/client"
 	"github.com/Karaulkin/fio-rest-api/internal/models"
 	"github.com/Karaulkin/fio-rest-api/internal/repository"
+	"github.com/Karaulkin/fio-rest-api/internal/utils/client"
 	"log/slog"
 	"strings"
 )
