@@ -33,5 +33,4 @@ type UsersResponse struct {
 	Users    []User `json:"users"`
 	Page     int    `json:"page"`
 	PageSize int    `json:"page_size"`
-	Total    int    `json:"total"`
 }

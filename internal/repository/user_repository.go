@@ -4,24 +4,35 @@ import (
 	"fmt"
 	"github.com/Karaulkin/fio-rest-api/internal/models"
 	pg "github.com/Karaulkin/fio-rest-api/internal/repository/postgres"
+	"github.com/labstack/gommon/log"
+	"log/slog"
+	"time"
 )
 
 type UserRepository struct {
-	db *pg.DB
+	db  *pg.DB
+	log *slog.Logger
 }
 
-func NewUsersRepository(db *pg.DB) *UserRepository {
-	return &UserRepository{db}
+func NewUsersRepository(db *pg.DB, log *slog.Logger) *UserRepository {
+	return &UserRepository{
+		db:  db,
+		log: log,
+	}
 }
 
 func (u *UserRepository) GetUsers(name string, page, pageSize int) ([]models.User, error) {
+	const op = "UserRepository.GetUsers"
+
+	log.Debug(op, "start", time.Now())
+
 	offset := (page - 1) * pageSize
 	var users []models.User
 
 	query := `
         SELECT id, name, surname, patronymic, age, gender, nationality
         FROM users
-        WHERE ($1 = '' OR name ILIKE '%'  $1  '%')
+        WHERE (name = '' OR name ILIKE '%' || $1 || '%')
         ORDER BY id
         LIMIT $2 OFFSET $3;
     `
@@ -43,10 +54,16 @@ func (u *UserRepository) GetUsers(name string, page, pageSize int) ([]models.Use
 		users = append(users, user)
 	}
 
+	log.Debug(op, "end", time.Now())
+
 	return users, nil
 }
 
 func (u *UserRepository) GetUser(id int64) (models.User, error) {
+	const op = "UserRepository.GetUser"
+
+	log.Debug(op, "start", time.Now())
+
 	var user models.User
 
 	query := `
@@ -59,11 +76,17 @@ func (u *UserRepository) GetUser(id int64) (models.User, error) {
 		return models.User{}, fmt.Errorf("failed to query user: %w", err)
 	}
 
+	log.Debug(op, "end", time.Now())
+
 	return user, nil
 }
 
 // CreateUser для добавления новых людей в формате (Корректное сообщение обогатить)
 func (u *UserRepository) CreateUser(user *models.User) error {
+	const op = "UserRepository.CreateUser"
+
+	log.Debug(op, "start", time.Now())
+
 	if user.Name == "" || user.Surname == "" {
 		return fmt.Errorf("name and surname are required")
 	}
@@ -80,11 +103,17 @@ func (u *UserRepository) CreateUser(user *models.User) error {
 		return fmt.Errorf("failed to insert user: %w", err)
 	}
 
+	log.Debug(op, "end", time.Now())
+
 	return nil
 }
 
 // FindByUserId для удаления по индификатору
 func (u *UserRepository) DeleteUserById(id int64) error {
+	const op = "UserRepository.DeleteUserById"
+
+	log.Debug(op, "start", time.Now())
+
 	query := `
 		DELETE FROM users WHERE id = $1;
 	`
@@ -102,11 +131,17 @@ func (u *UserRepository) DeleteUserById(id int64) error {
 		return fmt.Errorf("user with id %d not found", id)
 	}
 
+	log.Debug(op, "end", time.Now())
+
 	return nil
 }
 
 // UpdateUserобновляет пользоваткля
 func (u *UserRepository) UpdateUser(user *models.User) error {
+	const op = "UserRepository.UpdateUser"
+
+	log.Debug(op, "start", time.Now())
+
 	query := `
         UPDATE users
         SET name = $1, surname = $2, patronymic = $3, age = $4, gender = $5, nationality = $6
@@ -130,6 +165,8 @@ func (u *UserRepository) UpdateUser(user *models.User) error {
 	if rowsAffected == 0 {
 		return fmt.Errorf("user with id %d not found", user.ID)
 	}
+
+	log.Debug(op, "end", time.Now())
 
 	return nil
 }

@@ -10,6 +10,7 @@ package main
 
 import (
 	"context"
+	_ "github.com/Karaulkin/fio-rest-api/docs"
 	"github.com/Karaulkin/fio-rest-api/internal/api"
 	"github.com/Karaulkin/fio-rest-api/internal/api/handlers"
 	"github.com/Karaulkin/fio-rest-api/internal/config"
@@ -26,7 +27,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	//_ "github.com/Karaulkin/fio-rest-api/docs"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 
 	// Инициализация репозиториев
 	log.Debug("Up user repo service")
-	userRepo := repository.NewUsersRepository(db)
+	userRepo := repository.NewUsersRepository(db, log)
 
 	// Инициализация сервисов
 	log.Debug("Up user service")
@@ -64,9 +64,9 @@ func main() {
 
 	// Инициализация Echo
 	e := echo.New()
-	e.Use(middleware.Logger())
-	//e.Use(middleware.Recover())
-	//e.Use(middleware.CORS())
+	//e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 
 	// Инициализация валидатора
 	e.Validator = customMiddleware.NewValidator()
