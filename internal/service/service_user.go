@@ -89,16 +89,12 @@ func (s *UserService) UpdateProfile(user models.User) (models.User, error) {
 
 	s.log.Info(op, "Updating user")
 
-	if checkUserField(user.Name) != nil && checkUserField(user.Surname) != nil && checkUserField(user.Patronymic) != nil {
-		return models.User{}, ErrInvalidInput
-	}
-
 	oldDataUser, err := s.userRepo.GetUser(user.ID)
 	if err != nil {
 		return models.User{}, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	user = createUpdateUser(oldDataUser, user)
+	user = createUpdateUser(user, oldDataUser)
 
 	err = s.userRepo.UpdateUser(&user)
 	if err != nil {

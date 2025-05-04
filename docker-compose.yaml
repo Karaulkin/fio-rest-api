@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  fio-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fio-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./config:/app/config
+      - ./migrations:/app/migrations
+      - ./docs:/app/docs
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:15
+    container_name: pgdocker
+    environment:
+      POSTGRES_PASSWORD: pass123
+      POSTGRES_USER: katinaka
+      POSTGRES_DB: fio
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U katinaka -d fio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata: {}
