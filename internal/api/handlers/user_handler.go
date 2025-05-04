@@ -37,7 +37,7 @@ func NewUserHandler(userService *service.UserService, log *slog.Logger) *UserHan
 // @Param page query int false "Номер страницы"
 // @Param page_size query int false "Размер страницы"
 // @Success 200 {object} models.UsersResponse
-// @Failure 500 {object} echo.HTTPError
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /users [get]
 func (uh *UserHandler) GetUsers(c echo.Context) error {
 	name := c.QueryParam("name")
@@ -63,15 +63,15 @@ func (uh *UserHandler) GetUsers(c echo.Context) error {
 	})
 }
 
-// CreateUser Создание нового пользователя
+// CreateUser godoc
 // @Summary Добавить пользователя
 // @Tags users
 // @Accept json
 // @Produce json
 // @Param user body models.UserCreateRequest true "Данные пользователя"
 // @Success 201 {object} models.UserResponse
-// @Failure 400 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Failure 400 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /users [post]
 func (uh *UserHandler) CreateUser(c echo.Context) error {
 	var req models.UserCreateRequest
@@ -100,14 +100,14 @@ func (uh *UserHandler) CreateUser(c echo.Context) error {
 	})
 }
 
-// DeleteUser Удалить пользователя по ID
+// DeleteUser godoc
 // @Summary Удалить пользователя
 // @Tags users
 // @Param id path int true "ID пользователя"
-// @Success 200 {object} models.User
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} handlers.ErrorResponse
+// @Failure 404 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /users/{id} [delete]
 func (uh *UserHandler) DeleteUser(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -133,17 +133,17 @@ func (uh *UserHandler) DeleteUser(c echo.Context) error {
 	})
 }
 
-// UpdateUser Обновить данные пользователя
+// UpdateUser godoc
 // @Summary Обновить пользователя
 // @Tags users
 // @Accept json
 // @Produce json
 // @Param id path int true "ID пользователя"
-// @Param user body models.User true "Обновлённые данные"
-// @Success 200 {object} models.User
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Param user body models.UserResponse true "Обновлённые данные"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} handlers.ErrorResponse
+// @Failure 404 {object} handlers.ErrorResponse
+// @Failure 500 {object} handlers.ErrorResponse
 // @Router /users/{id} [put]
 func (uh *UserHandler) UpdateUser(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)

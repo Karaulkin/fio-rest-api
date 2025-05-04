@@ -26,17 +26,22 @@ type User interface {
 
 type UserService struct {
 	userRepo User
-	log      *slog.Logger //пционально для дебаг слоя о
+	log      *slog.Logger
 }
 
 func NewServiceUser(userRepo *repository.UserRepository, log *slog.Logger) *UserService {
-	return &UserService{userRepo: userRepo,
-		log: log.WithGroup("service"),
+	return &UserService{
+		userRepo: userRepo,
+		log:      log,
 	}
 }
 
 func (s *UserService) Create(user models.User) (models.User, error) {
-	if user.Name == "" || user.Surname == "" {
+	const op = "service.Create"
+
+	s.log.Info(op, "Creating user")
+
+	if checkUserField(user.Name) != nil || checkUserField(user.Surname) != nil {
 		return models.User{}, ErrInvalidInput
 	}
 
@@ -58,6 +63,14 @@ func (s *UserService) Create(user models.User) (models.User, error) {
 }
 
 func (s *UserService) DeleteById(userId int64) (models.User, error) {
+	const op = "service.DeleteById"
+
+	s.log.Info(op, "Deleting user")
+
+	if userId <= 0 {
+		return models.User{}, ErrInvalidInput
+	}
+
 	user, err := s.userRepo.GetUser(userId)
 
 	err = s.userRepo.DeleteUserById(userId)
@@ -72,7 +85,22 @@ func (s *UserService) DeleteById(userId int64) (models.User, error) {
 }
 
 func (s *UserService) UpdateProfile(user models.User) (models.User, error) {
-	err := s.userRepo.UpdateUser(&user)
+	const op = "service.UpdateProfile"
+
+	s.log.Info(op, "Updating user")
+
+	if checkUserField(user.Name) != nil && checkUserField(user.Surname) != nil && checkUserField(user.Patronymic) != nil {
+		return models.User{}, ErrInvalidInput
+	}
+
+	oldDataUser, err := s.userRepo.GetUser(user.ID)
+	if err != nil {
+		return models.User{}, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	user = createUpdateUser(oldDataUser, user)
+
+	err = s.userRepo.UpdateUser(&user)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return models.User{}, ErrNotFound
@@ -84,6 +112,14 @@ func (s *UserService) UpdateProfile(user models.User) (models.User, error) {
 }
 
 func (s *UserService) GetUsers(name string, page, pageSize int) ([]models.User, error) {
+	const op = "service.GetUsers"
+
+	s.log.Info(op, "Getting users")
+
+	if checkUserField(name) != nil {
+		return []models.User{}, ErrInvalidInput
+	}
+
 	if page < 1 || pageSize < 1 {
 		return nil, ErrInvalidInput
 	}
@@ -94,4 +130,49 @@ func (s *UserService) GetUsers(name string, page, pageSize int) ([]models.User, 
 	}
 
 	return users, nil
+}
+
+func createUpdateUser(newUser, oldUser models.User) models.User {
+	var updatedUser = oldUser
+
+	if len(newUser.Name) > 0 {
+		updatedUser.Name = newUser.Name
+	}
+
+	if len(newUser.Surname) > 0 {
+		updatedUser.Surname = newUser.Surname
+	}
+
+	if len(newUser.Patronymic) > 0 {
+		updatedUser.Patronymic = newUser.Patronymic
+	}
+
+	if len(newUser.Gender) > 0 {
+		updatedUser.Gender = newUser.Gender
+	}
+
+	if len(newUser.Nationality) > 0 {
+		updatedUser.Nationality = newUser.Nationality
+	}
+
+	if newUser.Age > 0 {
+		updatedUser.Age = newUser.Age
+	}
+
+	return updatedUser
+
+}
+
+func checkUserField(name string) error {
+	if len(name) <= 0 {
+		return errors.New("field is empty")
+	}
+
+	for _, char := range name {
+		if char > '0' && char < '9' {
+			return errors.New("field is invalid")
+		}
+	}
+
+	return nil
 }
