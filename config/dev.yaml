@@ -1,0 +1,14 @@
+log:
+  level: "dev"
+
+db:
+  host: "pgdocker"
+  port: "5432"
+  username: "katinaka"
+  password: "pass123"
+  database: "fio"
+
+
+server:
+  address: "localhost"
+  timeout: 10s
